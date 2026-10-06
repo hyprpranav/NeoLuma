@@ -941,3 +941,249 @@ body {
     font-size: 1.1rem;
   }
 }
+
+/* ============================================================
+   LDR RAW SUB-VALUE
+   ============================================================ */
+.ldr-raw-value {
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+}
+
+/* ============================================================
+   PHOTOTHERAPY PROGRESS ESTIMATION CARD
+   ============================================================ */
+.prog-est-card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.prog-est-header {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.prog-est-disclaimer {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.prog-top-row {
+  display: grid;
+  grid-template-columns: auto 160px 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.prog-absorption-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 130px;
+}
+
+.prog-abs-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+}
+
+.prog-abs-value {
+  font-family: var(--font-mono);
+  font-size: 2.6rem;
+  font-weight: 500;
+  color: var(--accent-blue);
+  line-height: 1;
+}
+
+.prog-abs-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.prog-ring-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  flex-shrink: 0;
+  margin: 0 auto;
+}
+
+.prog-ring-svg {
+  width: 140px;
+  height: 140px;
+  transform: rotate(-90deg);
+}
+
+.prog-ring-bg {
+  fill: none;
+  stroke: var(--accent-light);
+  stroke-width: 10;
+}
+
+.prog-ring-fill {
+  fill: none;
+  stroke: var(--accent-blue);
+  stroke-width: 10;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s ease;
+}
+
+.prog-ring-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.prog-ring-pct {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.prog-ring-sub {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prog-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.prog-stat-box {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prog-stat-val {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--accent-blue);
+}
+
+.prog-stat-lbl {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.prog-session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color);
+}
+
+.prog-session-timer-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.prog-session-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+}
+
+.prog-session-time {
+  font-family: var(--font-mono);
+  font-size: 1.7rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+
+.prog-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.prog-duration-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.prog-duration-input {
+  width: 72px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.prog-duration-input:focus {
+  border-color: var(--accent-blue);
+}
+
+@media (max-width: 900px) {
+  .prog-top-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .prog-absorption-box {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 580px) {
+  .prog-top-row {
+    grid-template-columns: 1fr;
+  }
+
+  .prog-stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .prog-session-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

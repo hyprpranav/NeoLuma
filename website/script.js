@@ -256,42 +256,58 @@ function updateDashboard(data) {
   updateGraphHistory(data);
   drawGraph();
   updateControlStatesFromData(data);
+  updateProgress(data);
   updateFirebase(data); // placeholder for future Firebase integration
 }
 
 /**
  * Update individual LDR value displays.
+ * Main display = inverted value (4095 - raw) â€” represents absorption index.
+ * Sub display  = raw ADC reading shown small below.
  * @param {Object} data
  */
 function updateLDRValues(data) {
   const updates = [
-    { id: 'ldr1-value', val: data.ldr1 },
-    { id: 'ldr2-value', val: data.ldr2 },
-    { id: 'ldr3-value', val: data.ldr3 },
-    { id: 'ldr4-value', val: data.ldr4 },
+    { mainId: 'ldr1-value', rawId: 'ldr1-raw', val: data.ldr1 },
+    { mainId: 'ldr2-value', rawId: 'ldr2-raw', val: data.ldr2 },
+    { mainId: 'ldr3-value', rawId: 'ldr3-raw', val: data.ldr3 },
+    { mainId: 'ldr4-value', rawId: 'ldr4-raw', val: data.ldr4 },
   ];
 
-  for (const { id, val } of updates) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    el.textContent = String(val).padStart(4, '0');
-    // Brief highlight on update
-    el.classList.add('updated');
-    setTimeout(() => el.classList.remove('updated'), 400);
+  for (const { mainId, rawId, val } of updates) {
+    const inverted = ADC_MAX - val;
+
+    // Main big display: inverted (absorption) value
+    const mainEl = document.getElementById(mainId);
+    if (mainEl) {
+      mainEl.textContent = String(inverted).padStart(4, '0');
+      mainEl.classList.add('updated');
+      setTimeout(() => mainEl.classList.remove('updated'), 400);
+    }
+
+    // Small sub-display: raw ADC reading
+    const rawEl = document.getElementById(rawId);
+    if (rawEl) rawEl.textContent = String(val).padStart(4, '0');
   }
 }
 
 /**
  * Calculate and update RGB relative optical readings.
- * Red Average = (LDR1 + LDR3) / 2
- * Green       = LDR2
- * Blue        = LDR4
+ * Uses inverted (absorption) values: 4095 - raw.
+ * Red Average = ((4095-LDR1) + (4095-LDR3)) / 2
+ * Green       = 4095 - LDR2
+ * Blue        = 4095 - LDR4
  * @param {Object} data
  */
 function updateRGBValues(data) {
-  const redAvg   = Math.round((data.ldr1 + data.ldr3) / 2);
-  const greenVal = data.ldr2;
-  const blueVal  = data.ldr4;
+  const inv1 = ADC_MAX - data.ldr1;
+  const inv2 = ADC_MAX - data.ldr2;
+  const inv3 = ADC_MAX - data.ldr3;
+  const inv4 = ADC_MAX - data.ldr4;
+
+  const redAvg   = Math.round((inv1 + inv3) / 2);
+  const greenVal = inv2;
+  const blueVal  = inv4;
 
   safeSetText('rgb-red-value',   String(redAvg).padStart(4, '0'));
   safeSetText('rgb-green-value', String(greenVal).padStart(4, '0'));
@@ -300,11 +316,16 @@ function updateRGBValues(data) {
 
 /**
  * Calculate and update overall average reading and progress bar.
- * Average = (LDR1 + LDR2 + LDR3 + LDR4) / 4
+ * Uses inverted absorption values: avg = (inv1+inv2+inv3+inv4)/4
  * @param {Object} data
  */
 function updateAverage(data) {
-  const avg = Math.round((data.ldr1 + data.ldr2 + data.ldr3 + data.ldr4) / 4);
+  const inv1 = ADC_MAX - data.ldr1;
+  const inv2 = ADC_MAX - data.ldr2;
+  const inv3 = ADC_MAX - data.ldr3;
+  const inv4 = ADC_MAX - data.ldr4;
+  const avg = Math.round((inv1 + inv2 + inv3 + inv4) / 4);
+
   safeSetText('avg-value', String(avg).padStart(4, '0'));
 
   const pct = (avg / ADC_MAX) * 100;
@@ -837,4 +858,110 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', init);
 } else {
   init();
+}
+
+/* ============================================================
+   PHOTOTHERAPY PROGRESS ESTIMATION
+   ============================================================ */
+
+let sessionActive = false;
+let sessionStartTime = 0;
+let sessionTimerInterval = null;
+let sessionDurationMs = 12 * 60 * 60 * 1000;
+
+function startSession() {
+  if (sessionActive) return;
+  const durationInput = document.getElementById('prog-duration-input');
+  const hours = parseFloat(durationInput.value);
+  if (isNaN(hours) || hours <= 0) {
+    showNotification('Invalid session duration', 'error');
+    return;
+  }
+  
+  sessionDurationMs = hours * 60 * 60 * 1000;
+  sessionStartTime = Date.now();
+  sessionActive = true;
+  
+  document.getElementById('btn-session-start').disabled = true;
+  document.getElementById('btn-session-stop').disabled = false;
+  durationInput.disabled = true;
+  
+  safeSetText('prog-total-hours-display', hours.toFixed(1) + 'h');
+  
+  sessionTimerInterval = setInterval(updateSessionTimer, 1000);
+  updateSessionTimer(); // Initial call
+  showNotification('Phototherapy session started', 'success');
+}
+
+function stopSession() {
+  if (!sessionActive) return;
+  sessionActive = false;
+  clearInterval(sessionTimerInterval);
+  
+  document.getElementById('btn-session-start').disabled = false;
+  document.getElementById('btn-session-stop').disabled = true;
+  document.getElementById('prog-duration-input').disabled = false;
+  
+  showNotification('Phototherapy session stopped', 'info');
+}
+
+function updateSessionTimer() {
+  if (!sessionActive) return;
+  const elapsedMs = Date.now() - sessionStartTime;
+  
+  let totalSeconds = Math.floor(elapsedMs / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  totalSeconds %= 3600;
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  
+  const formatted = [
+    h.toString().padStart(2, '0'),
+    m.toString().padStart(2, '0'),
+    s.toString().padStart(2, '0')
+  ].join(':');
+  
+  safeSetText('prog-session-time', formatted);
+}
+
+function updateProgress(data) {
+  const inv1 = ADC_MAX - data.ldr1;
+  const inv2 = ADC_MAX - data.ldr2;
+  const inv3 = ADC_MAX - data.ldr3;
+  const inv4 = ADC_MAX - data.ldr4;
+  const absAvg = Math.round((inv1 + inv2 + inv3 + inv4) / 4);
+  
+  safeSetText('prog-abs-value', String(absAvg).padStart(4, '0'));
+  
+  let completionPct = 0;
+  if (sessionActive) {
+     const elapsedMs = Date.now() - sessionStartTime;
+     completionPct = Math.min(100, Math.max(0, (elapsedMs / sessionDurationMs) * 100));
+  }
+  
+  const circleCircumference = 314;
+  const dashOffset = circleCircumference - (completionPct / 100) * circleCircumference;
+  
+  const ring = document.getElementById('prog-ring-fill');
+  if (ring) {
+    ring.style.strokeDashoffset = dashOffset;
+  }
+  
+  safeSetText('prog-pct-text', Math.floor(completionPct) + '%');
+  safeSetText('prog-completed-pct', completionPct.toFixed(1) + '%');
+  safeSetText('prog-remaining-pct', (100 - completionPct).toFixed(1) + '%');
+  
+  if (sessionActive) {
+     const elapsedMs = Date.now() - sessionStartTime;
+     const remainingMs = Math.max(0, sessionDurationMs - elapsedMs);
+     const remainingHours = remainingMs / (1000 * 60 * 60);
+     safeSetText('prog-est-hours', remainingHours.toFixed(1) + 'h');
+     
+     if (elapsedMs >= sessionDurationMs) {
+         stopSession();
+         showNotification('Phototherapy session completed!', 'success');
+     }
+  } else {
+     safeSetText('prog-est-hours', '—');
+  }
 }

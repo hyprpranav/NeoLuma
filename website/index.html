@@ -113,7 +113,8 @@
       <div class="card ldr-card" id="card-ldr1">
         <div class="ldr-led-badge red">RED LED</div>
         <div class="ldr-name">LDR 1</div>
-        <div class="ldr-value" id="ldr1-value">0000</div>
+        <div class="ldr-value" id="ldr1-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="ldr1-raw">0000</span></div>
         <div class="ldr-status" id="ldr1-status">
           <span class="sdot"></span>
           <span id="ldr1-status-text">Waiting</span>
@@ -124,7 +125,8 @@
       <div class="card ldr-card" id="card-ldr2">
         <div class="ldr-led-badge green">GREEN LED</div>
         <div class="ldr-name">LDR 2</div>
-        <div class="ldr-value" id="ldr2-value">0000</div>
+        <div class="ldr-value" id="ldr2-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="ldr2-raw">0000</span></div>
         <div class="ldr-status" id="ldr2-status">
           <span class="sdot"></span>
           <span id="ldr2-status-text">Waiting</span>
@@ -135,7 +137,8 @@
       <div class="card ldr-card" id="card-ldr3">
         <div class="ldr-led-badge orange">ORANGE LED</div>
         <div class="ldr-name">LDR 3</div>
-        <div class="ldr-value" id="ldr3-value">0000</div>
+        <div class="ldr-value" id="ldr3-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="ldr3-raw">0000</span></div>
         <div class="ldr-status" id="ldr3-status">
           <span class="sdot"></span>
           <span id="ldr3-status-text">Waiting</span>
@@ -146,7 +149,8 @@
       <div class="card ldr-card" id="card-ldr4">
         <div class="ldr-led-badge blue">BLUE LED</div>
         <div class="ldr-name">LDR 4</div>
-        <div class="ldr-value" id="ldr4-value">0000</div>
+        <div class="ldr-value" id="ldr4-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="ldr4-raw">0000</span></div>
         <div class="ldr-status" id="ldr4-status">
           <span class="sdot"></span>
           <span id="ldr4-status-text">Waiting</span>
@@ -219,6 +223,86 @@
           Average = (LDR1 + LDR2 + LDR3 + LDR4) / 4 &mdash; Prototype demonstration only.
           Not a bilirubin measurement.
         </p>
+      </div>
+
+    </div>
+
+    <!-- ---- SECTION: PHOTOTHERAPY PROGRESS ---- -->
+    <div class="section-header">Phototherapy Progress Estimation</div>
+
+    <div class="card prog-est-card">
+      <div class="prog-est-header">
+        <div class="card-title" style="margin-bottom:0;">Estimated Treatment Progress</div>
+        <div class="prog-est-disclaimer">Academic prototype — relative optical values only. Not a clinical measurement.</div>
+      </div>
+
+      <!-- Top row: absorption index + big progress ring area -->
+      <div class="prog-top-row">
+
+        <!-- Absorption index -->
+        <div class="prog-absorption-box">
+          <div class="prog-abs-label">Optical Absorption Index</div>
+          <div class="prog-abs-value" id="prog-abs-value">0000</div>
+          <div class="prog-abs-sub">out of 4095</div>
+        </div>
+
+        <!-- Donut-style completion ring -->
+        <div class="prog-ring-wrap">
+          <svg class="prog-ring-svg" viewBox="0 0 120 120" aria-label="Completion percentage ring">
+            <circle class="prog-ring-bg"  cx="60" cy="60" r="50" />
+            <circle class="prog-ring-fill" id="prog-ring-fill" cx="60" cy="60" r="50"
+                    stroke-dasharray="314"
+                    stroke-dashoffset="314" />
+          </svg>
+          <div class="prog-ring-center">
+            <span class="prog-ring-pct" id="prog-pct-text">0%</span>
+            <span class="prog-ring-sub">Complete</span>
+          </div>
+        </div>
+
+        <!-- Stats grid -->
+        <div class="prog-stats-grid">
+          <div class="prog-stat-box">
+            <div class="prog-stat-val" id="prog-completed-pct">0%</div>
+            <div class="prog-stat-lbl">Completed</div>
+          </div>
+          <div class="prog-stat-box">
+            <div class="prog-stat-val" id="prog-remaining-pct">100%</div>
+            <div class="prog-stat-lbl">Remaining</div>
+          </div>
+          <div class="prog-stat-box">
+            <div class="prog-stat-val" id="prog-est-hours">—</div>
+            <div class="prog-stat-lbl">Est. Hours Left</div>
+          </div>
+          <div class="prog-stat-box">
+            <div class="prog-stat-val" id="prog-total-hours-display">12.0h</div>
+            <div class="prog-stat-lbl">Total Session</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Session timer + controls -->
+      <div class="prog-session-row">
+        <div class="prog-session-timer-wrap">
+          <span class="prog-session-label">Session Timer</span>
+          <span class="prog-session-time" id="prog-session-time">00:00:00</span>
+        </div>
+
+        <div class="prog-controls">
+          <label class="prog-duration-label" for="prog-duration-input">Total Session Duration (hours)</label>
+          <input class="prog-duration-input" id="prog-duration-input"
+                 type="number" min="1" max="72" step="0.5" value="12"
+                 aria-label="Expected total phototherapy session duration in hours" />
+          <button class="btn-primary btn-turn-on" id="btn-session-start"
+                  onclick="startSession()" style="width:auto; padding:8px 18px;">
+            START SESSION
+          </button>
+          <button class="btn-primary btn-turn-off" id="btn-session-stop"
+                  onclick="stopSession()" style="width:auto; padding:8px 18px;" disabled>
+            STOP SESSION
+          </button>
+        </div>
       </div>
 
     </div>
