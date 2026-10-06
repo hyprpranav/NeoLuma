@@ -104,8 +104,37 @@
 
     </div>
 
+    <!-- ---- SECTION: PRIMARY SENSORS ---- -->
+    <div class="section-header">Primary Photodiode Sensors</div>
+
+    <div class="ldr-grid pd-grid">
+      <!-- PD 1 -->
+      <div class="card ldr-card" id="card-pd1">
+        <div class="ldr-led-badge purple">BPW34 SENSOR</div>
+        <div class="ldr-name">Photodiode 1</div>
+        <div class="ldr-value" id="pd1-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="pd1-raw">0000</span></div>
+        <div class="ldr-status" id="pd1-status">
+          <span class="sdot"></span>
+          <span id="pd1-status-text">Waiting</span>
+        </div>
+      </div>
+
+      <!-- PD 2 -->
+      <div class="card ldr-card" id="card-pd2">
+        <div class="ldr-led-badge purple">BPW34 SENSOR</div>
+        <div class="ldr-name">Photodiode 2</div>
+        <div class="ldr-value" id="pd2-value">4095</div>
+        <div class="ldr-raw-value">Raw: <span id="pd2-raw">0000</span></div>
+        <div class="ldr-status" id="pd2-status">
+          <span class="sdot"></span>
+          <span id="pd2-status-text">Waiting</span>
+        </div>
+      </div>
+    </div>
+
     <!-- ---- SECTION: LDR SENSORS ---- -->
-    <div class="section-header">LDR Sensors</div>
+    <div class="section-header">Secondary LDR Sensors</div>
 
     <div class="ldr-grid">
 
@@ -317,6 +346,20 @@
         <div class="card-title">Sensor Status</div>
 
         <div class="sensor-status-list">
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">Photodiode 1 (BPW34)</span>
+            <span class="sensor-status-badge" id="ss-pd1">
+              <span class="sbdot"></span>
+              <span id="ss-pd1-text">Waiting</span>
+            </span>
+          </div>
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">Photodiode 2 (BPW34)</span>
+            <span class="sensor-status-badge" id="ss-pd2">
+              <span class="sbdot"></span>
+              <span id="ss-pd2-text">Waiting</span>
+            </span>
+          </div>
           <div class="sensor-status-row">
             <span class="sensor-status-name">LDR 1 (Red LED)</span>
             <span class="sensor-status-badge" id="ss-ldr1">

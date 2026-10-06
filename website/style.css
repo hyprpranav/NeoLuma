@@ -1187,3 +1187,23 @@ body {
     align-items: flex-start;
   }
 }
+
+/* ============================================================
+   PHOTODIODE SENSOR STYLES (BPW34)
+   ============================================================ */
+.ldr-led-badge.purple {
+  background: rgba(156, 39, 176, 0.1);
+  color: #9c27b0;
+  border: 1px solid rgba(156, 39, 176, 0.2);
+}
+
+.pd-grid {
+  grid-template-columns: 1fr 1fr;
+  margin-bottom: 25px;
+}
+
+@media (max-width: 768px) {
+  .pd-grid {
+    grid-template-columns: 1fr;
+  }
+}

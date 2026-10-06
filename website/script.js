@@ -48,11 +48,13 @@ let readLoopActive  = false;
 let lineBuffer      = '';
 
 /* Sensor data store */
-let sensorData = { ldr1: 0, ldr2: 0, ldr3: 0, ldr4: 0, photo: 0, led: 0 };
+let sensorData = { pd1: 0, pd2: 0, ldr1: 0, ldr2: 0, ldr3: 0, ldr4: 0, photo: 0, led: 0 };
 let dataReceived = false; // true once at least one valid packet arrived
 
 /* Graph history */
 const graphHistory = {
+  pd1: new Array(GRAPH_POINTS).fill(0),
+  pd2: new Array(GRAPH_POINTS).fill(0),
   ldr1: new Array(GRAPH_POINTS).fill(0),
   ldr2: new Array(GRAPH_POINTS).fill(0),
   ldr3: new Array(GRAPH_POINTS).fill(0),
@@ -224,12 +226,14 @@ function parseSensorData(jsonStr) {
   }
 
   // Validate that at minimum ldr1–ldr4 exist and are numbers
-  const required = ['ldr1', 'ldr2', 'ldr3', 'ldr4'];
+  const required = ['pd1', 'pd2', 'ldr1', 'ldr2', 'ldr3', 'ldr4'];
   for (const key of required) {
     if (typeof parsed[key] !== 'number') return;
   }
 
   // Clamp values to valid ADC range
+  sensorData.pd1   = Math.max(0, Math.min(ADC_MAX, Math.round(parsed.pd1)));
+  sensorData.pd2   = Math.max(0, Math.min(ADC_MAX, Math.round(parsed.pd2)));
   sensorData.ldr1  = Math.max(0, Math.min(ADC_MAX, Math.round(parsed.ldr1)));
   sensorData.ldr2  = Math.max(0, Math.min(ADC_MAX, Math.round(parsed.ldr2)));
   sensorData.ldr3  = Math.max(0, Math.min(ADC_MAX, Math.round(parsed.ldr3)));
@@ -249,6 +253,7 @@ function parseSensorData(jsonStr) {
  * @param {Object} data - { ldr1, ldr2, ldr3, ldr4, photo, led }
  */
 function updateDashboard(data) {
+  updatePDValues(data);
   updateLDRValues(data);
   updateRGBValues(data);
   updateAverage(data);
@@ -266,6 +271,24 @@ function updateDashboard(data) {
  * Sub display  = raw ADC reading shown small below.
  * @param {Object} data
  */
+function updatePDValues(data) {
+  const updates = [
+    { mainId: 'pd1-value', rawId: 'pd1-raw', val: data.pd1 },
+    { mainId: 'pd2-value', rawId: 'pd2-raw', val: data.pd2 },
+  ];
+  for (const { mainId, rawId, val } of updates) {
+    const inverted = ADC_MAX - val;
+    const mainEl = document.getElementById(mainId);
+    if (mainEl) {
+      mainEl.textContent = String(inverted).padStart(4, '0');
+      mainEl.classList.add('updated');
+      setTimeout(() => mainEl.classList.remove('updated'), 400);
+    }
+    const rawEl = document.getElementById(rawId);
+    if (rawEl) rawEl.textContent = String(val).padStart(4, '0');
+  }
+}
+
 function updateLDRValues(data) {
   const updates = [
     { mainId: 'ldr1-value', rawId: 'ldr1-raw', val: data.ldr1 },
@@ -340,7 +363,7 @@ function updateAverage(data) {
  */
 function updateSensorStatus(data) {
   // Individual LDR card statuses
-  const ldrIds = ['ldr1', 'ldr2', 'ldr3', 'ldr4'];
+  const ldrIds = ['pd1', 'pd2', 'ldr1', 'ldr2', 'ldr3', 'ldr4'];
   for (const id of ldrIds) {
     const statusEl    = document.getElementById(`${id}-status`);
     const statusTxtEl = document.getElementById(`${id}-status-text`);
@@ -351,8 +374,8 @@ function updateSensorStatus(data) {
   }
 
   // Sidebar sensor status badges
-  const ssIds = ['ss-ldr1', 'ss-ldr2', 'ss-ldr3', 'ss-ldr4'];
-  const ssTexts = ['ss-ldr1-text', 'ss-ldr2-text', 'ss-ldr3-text', 'ss-ldr4-text'];
+  const ssIds = ['ss-pd1', 'ss-pd2', 'ss-ldr1', 'ss-ldr2', 'ss-ldr3', 'ss-ldr4'];
+  const ssTexts = ['ss-pd1-text', 'ss-pd2-text', 'ss-ldr1-text', 'ss-ldr2-text', 'ss-ldr3-text', 'ss-ldr4-text'];
   for (let i = 0; i < ssIds.length; i++) {
     const badge = document.getElementById(ssIds[i]);
     const txt   = document.getElementById(ssTexts[i]);
@@ -503,7 +526,7 @@ function resetSensorStatus() {
     if (statusTxtEl) statusTxtEl.textContent = 'Waiting';
   }
 
-  const ssIds = ['ss-ldr1', 'ss-ldr2', 'ss-ldr3', 'ss-ldr4'];
+  const ssIds = ['ss-pd1', 'ss-pd2', 'ss-ldr1', 'ss-ldr2', 'ss-ldr3', 'ss-ldr4'];
   const ssTxts = ['ss-ldr1-text', 'ss-ldr2-text', 'ss-ldr3-text', 'ss-ldr4-text'];
   for (let i = 0; i < ssIds.length; i++) {
     const badge = document.getElementById(ssIds[i]);
@@ -925,11 +948,9 @@ function updateSessionTimer() {
 }
 
 function updateProgress(data) {
-  const inv1 = ADC_MAX - data.ldr1;
-  const inv2 = ADC_MAX - data.ldr2;
-  const inv3 = ADC_MAX - data.ldr3;
-  const inv4 = ADC_MAX - data.ldr4;
-  const absAvg = Math.round((inv1 + inv2 + inv3 + inv4) / 4);
+  const inv1 = ADC_MAX - data.pd1;
+  const inv2 = ADC_MAX - data.pd2;
+  const absAvg = Math.round((inv1 + inv2) / 2);
   
   safeSetText('prog-abs-value', String(absAvg).padStart(4, '0'));
   

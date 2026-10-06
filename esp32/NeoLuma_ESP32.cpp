@@ -32,10 +32,14 @@
    PIN DEFINITIONS — Adjust to match your wiring
    ============================================================ */
 
-// LDR Sensor inputs (analog — connect to ADC-capable GPIO pins)
-// ESP32 ADC1 channels are recommended (ADC2 shares pins with Wi-Fi)
-#define LDR1_PIN    34    // LDR 1 — paired with Red LED 1
-#define LDR2_PIN    35    // LDR 2 — paired with Green LED
+// BPW34 Photodiode inputs (Primary sensors)
+#define PD1_PIN     34    // BPW34 Photodiode 1
+#define PD2_PIN     35    // BPW34 Photodiode 2
+
+// LDR Sensor inputs (Secondary sensors - analog input)
+// ESP32 ADC1 channels are recommended
+#define LDR1_PIN    36    // LDR 1 — paired with Red LED 1 (moved from 34)
+#define LDR2_PIN    39    // LDR 2 — paired with Green LED (moved from 35)
 #define LDR3_PIN    32    // LDR 3 — paired with Red LED 2
 #define LDR4_PIN    33    // LDR 4 — paired with Blue LED
 
@@ -157,6 +161,14 @@ void loop() {
  * but we set them as INPUT for clarity.
  */
 void initPins() {
+  analogReadResolution(12); // 0-4095
+
+  // Primary Photodiode pins
+  analogSetPinAttenuation(PD1_PIN, ADC_11db);
+  analogSetPinAttenuation(PD2_PIN, ADC_11db);
+  pinMode(PD1_PIN, INPUT);
+  pinMode(PD2_PIN, INPUT);
+
   // LDR sensor pins (analog input)
   pinMode(LDR1_PIN, INPUT);
   pinMode(LDR2_PIN, INPUT);
@@ -261,23 +273,28 @@ int readLDR(int pin) {
    ============================================================ */
 
 /**
- * Read all four LDR sensors and send a JSON packet over Serial.
+ * Read all sensors and send a JSON packet over Serial.
  * Format (must match JavaScript parser exactly):
- *   {"ldr1":NNN,"ldr2":NNN,"ldr3":NNN,"ldr4":NNN,"photo":0|1,"led":0|1}
+ *   {"pd1":NNN,"pd2":NNN,"ldr1":NNN,"ldr2":NNN,"ldr3":NNN,"ldr4":NNN,"photo":0|1,"led":0|1}
  *
  * The JSON is sent as a single line followed by '\n'.
  * The JavaScript readSerialData() function splits on '\n' to extract lines.
  */
 void sendSensorJSON() {
-  // Read all four LDR sensors
+  // Read primary photodiode sensors
+  int p1 = readLDR(PD1_PIN);
+  int p2 = readLDR(PD2_PIN);
+
+  // Read secondary LDR sensors
   int v1 = readLDR(LDR1_PIN);
   int v2 = readLDR(LDR2_PIN);
   int v3 = readLDR(LDR3_PIN);
   int v4 = readLDR(LDR4_PIN);
 
   // Build JSON string manually (no library dependency)
-  // Field names MUST match JavaScript: ldr1, ldr2, ldr3, ldr4, photo, led
   Serial.print("{");
+  Serial.print("\"pd1\":"); Serial.print(p1); Serial.print(",");
+  Serial.print("\"pd2\":"); Serial.print(p2); Serial.print(",");
   Serial.print("\"ldr1\":"); Serial.print(v1); Serial.print(",");
   Serial.print("\"ldr2\":"); Serial.print(v2); Serial.print(",");
   Serial.print("\"ldr3\":"); Serial.print(v3); Serial.print(",");
