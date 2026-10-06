@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeoLuma — Neonatal Phototherapy Optical Monitoring</title>
+  <meta name="description" content="NeoLuma: Academic prototype dashboard for neonatal phototherapy optical monitoring using ESP32 and LDR sensors. Relative optical readings only." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       HEADER
+       ============================================================ -->
+  <header class="header" role="banner">
+    <div class="header-inner">
+
+      <div class="header-brand">
+        <span class="brand-name">NeoLuma</span>
+        <span class="brand-subtitle">Neonatal Phototherapy Optical Monitoring</span>
+      </div>
+
+      <div class="header-right">
+        <div class="status-badge" id="connection-status-badge" aria-live="polite">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-text">Disconnected</span>
+        </div>
+
+        <button class="btn-connect" id="btn-connect" onclick="handleConnectButton()">
+          CONNECT ESP32
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- DEMO MODE BANNER -->
+  <div class="demo-banner" id="demo-banner" role="status" aria-live="polite">
+    ⚠ DEMO MODE — Simulated sensor data. Connect ESP32 for real readings.
+  </div>
+
+  <!-- NOTIFICATION -->
+  <div class="notification-bar">
+    <div class="notification" id="notification" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <!-- ============================================================
+       MAIN DASHBOARD
+       ============================================================ -->
+  <main class="main-wrapper" role="main">
+
+    <!-- ---- SECTION: CONTROL ---- -->
+    <div class="section-header">Control</div>
+
+    <div class="controls-grid">
+
+      <!-- Phototherapy Light Control -->
+      <div class="card control-card" id="card-photo-control">
+        <div class="card-title">Phototherapy Light</div>
+
+        <div class="control-status-row">
+          <span class="control-label">Main Light</span>
+          <span class="control-state" id="photo-state">
+            <span class="dot"></span>
+            <span id="photo-state-text">OFF</span>
+          </span>
+        </div>
+
+        <div class="control-buttons">
+          <button class="btn-primary btn-turn-on"
+                  id="btn-photo-on"
+                  onclick="turnPhototherapyOn()"
+                  aria-label="Turn phototherapy light ON">TURN ON</button>
+          <button class="btn-primary btn-turn-off"
+                  id="btn-photo-off"
+                  onclick="turnPhototherapyOff()"
+                  aria-label="Turn phototherapy light OFF">TURN OFF</button>
+        </div>
+      </div>
+
+      <!-- Measurement LED System -->
+      <div class="card control-card" id="card-led-control">
+        <div class="card-title">Measurement LED System</div>
+
+        <div class="control-status-row">
+          <span class="control-label">4 LEDs (R·G·R·B)</span>
+          <span class="control-state" id="led-state">
+            <span class="dot"></span>
+            <span id="led-state-text">OFF</span>
+          </span>
+        </div>
+
+        <div class="control-buttons">
+          <button class="btn-primary btn-turn-on"
+                  id="btn-led-on"
+                  onclick="turnLEDsOn()"
+                  aria-label="Turn measurement LEDs ON">TURN ON</button>
+          <button class="btn-primary btn-turn-off"
+                  id="btn-led-off"
+                  onclick="turnLEDsOff()"
+                  aria-label="Turn measurement LEDs OFF">TURN OFF</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---- SECTION: LDR SENSORS ---- -->
+    <div class="section-header">LDR Sensors</div>
+
+    <div class="ldr-grid">
+
+      <!-- LDR 1 -->
+      <div class="card ldr-card" id="card-ldr1">
+        <div class="ldr-led-badge red">RED LED</div>
+        <div class="ldr-name">LDR 1</div>
+        <div class="ldr-value" id="ldr1-value">0000</div>
+        <div class="ldr-status" id="ldr1-status">
+          <span class="sdot"></span>
+          <span id="ldr1-status-text">Waiting</span>
+        </div>
+      </div>
+
+      <!-- LDR 2 -->
+      <div class="card ldr-card" id="card-ldr2">
+        <div class="ldr-led-badge green">GREEN LED</div>
+        <div class="ldr-name">LDR 2</div>
+        <div class="ldr-value" id="ldr2-value">0000</div>
+        <div class="ldr-status" id="ldr2-status">
+          <span class="sdot"></span>
+          <span id="ldr2-status-text">Waiting</span>
+        </div>
+      </div>
+
+      <!-- LDR 3 -->
+      <div class="card ldr-card" id="card-ldr3">
+        <div class="ldr-led-badge orange">ORANGE LED</div>
+        <div class="ldr-name">LDR 3</div>
+        <div class="ldr-value" id="ldr3-value">0000</div>
+        <div class="ldr-status" id="ldr3-status">
+          <span class="sdot"></span>
+          <span id="ldr3-status-text">Waiting</span>
+        </div>
+      </div>
+
+      <!-- LDR 4 -->
+      <div class="card ldr-card" id="card-ldr4">
+        <div class="ldr-led-badge blue">BLUE LED</div>
+        <div class="ldr-name">LDR 4</div>
+        <div class="ldr-value" id="ldr4-value">0000</div>
+        <div class="ldr-status" id="ldr4-status">
+          <span class="sdot"></span>
+          <span id="ldr4-status-text">Waiting</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---- SECTION: RGB + AVERAGE ---- -->
+    <div class="section-header">Optical Readings</div>
+
+    <div class="two-col">
+
+      <!-- RGB Optical Reading -->
+      <div class="card">
+        <div class="card-title">RGB Optical Reading</div>
+
+        <div class="rgb-grid">
+
+          <!-- Red -->
+          <div class="rgb-card">
+            <div class="rgb-color-bar red"></div>
+            <div class="rgb-label red">RED</div>
+            <div class="rgb-sub-label">LDR 1 + LDR 3 avg</div>
+            <div class="rgb-value" id="rgb-red-value">0000</div>
+          </div>
+
+          <!-- Green -->
+          <div class="rgb-card">
+            <div class="rgb-color-bar green"></div>
+            <div class="rgb-label green">GREEN</div>
+            <div class="rgb-sub-label">LDR 2</div>
+            <div class="rgb-value" id="rgb-green-value">0000</div>
+          </div>
+
+          <!-- Blue -->
+          <div class="rgb-card">
+            <div class="rgb-color-bar blue"></div>
+            <div class="rgb-label blue">BLUE</div>
+            <div class="rgb-sub-label">LDR 4</div>
+            <div class="rgb-value" id="rgb-blue-value">0000</div>
+          </div>
+
+        </div>
+
+        <p class="rgb-relative-label">Relative Optical Reading — not calibrated clinical values</p>
+      </div>
+
+      <!-- Average Optical Reading -->
+      <div class="card average-card">
+        <div class="card-title">Average Optical Reading</div>
+
+        <div class="average-display">
+          <span class="average-value" id="avg-value">0000</span>
+          <span class="average-unit">Relative Units</span>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="avg-progress-bar"></div>
+          </div>
+          <div class="progress-labels">
+            <span>0</span>
+            <span>Prototype Relative Reading</span>
+            <span>4095</span>
+          </div>
+        </div>
+
+        <p class="average-note">
+          Average = (LDR1 + LDR2 + LDR3 + LDR4) / 4 &mdash; Prototype demonstration only.
+          Not a bilirubin measurement.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- ---- SECTION: STATUS + LAYOUT ---- -->
+    <div class="section-header">System Info</div>
+
+    <div class="two-col">
+
+      <!-- Sensor Status -->
+      <div class="card">
+        <div class="card-title">Sensor Status</div>
+
+        <div class="sensor-status-list">
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">LDR 1 (Red LED)</span>
+            <span class="sensor-status-badge" id="ss-ldr1">
+              <span class="sbdot"></span>
+              <span id="ss-ldr1-text">Waiting</span>
+            </span>
+          </div>
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">LDR 2 (Green LED)</span>
+            <span class="sensor-status-badge" id="ss-ldr2">
+              <span class="sbdot"></span>
+              <span id="ss-ldr2-text">Waiting</span>
+            </span>
+          </div>
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">LDR 3 (Red LED)</span>
+            <span class="sensor-status-badge" id="ss-ldr3">
+              <span class="sbdot"></span>
+              <span id="ss-ldr3-text">Waiting</span>
+            </span>
+          </div>
+          <div class="sensor-status-row">
+            <span class="sensor-status-name">LDR 4 (Blue LED)</span>
+            <span class="sensor-status-badge" id="ss-ldr4">
+              <span class="sbdot"></span>
+              <span id="ss-ldr4-text">Waiting</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout Visualization -->
+      <div class="card layout-viz-card">
+        <div class="card-title">Optical Measurement Layout</div>
+
+        <div class="layout-diagram" aria-label="Physical layout diagram of LDR sensors and LEDs">
+              LDR 1
+                ↑
+           [ RED LED ]
+
+LDR 4         CENTRAL        LDR 2
+  ↤ [BLUE]   [ LIGHT ]   [GREEN] ↦
+
+           [ RED LED ]
+                ↓
+              LDR 3</div>
+
+        <p class="layout-note">Simulated Phototherapy Light — Conceptual prototype layout</p>
+      </div>
+
+    </div>
+
+    <!-- ---- SECTION: GRAPH ---- -->
+    <div class="section-header">Live Graph</div>
+
+    <div class="card graph-card">
+      <div class="card-title">Live LDR Readings</div>
+
+      <div class="graph-legend">
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#e05a5a;"></span> LDR 1 (Red)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#3fba74;"></span> LDR 2 (Green)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#e0905a;"></span> LDR 3 (Red 2)
+        </div>
+        <div class="legend-item">
+          <span class="legend-dot" style="background:#4a90d9;"></span> LDR 4 (Blue)
+        </div>
+      </div>
+
+      <canvas id="ldr-chart" aria-label="Real-time LDR sensor readings chart"></canvas>
+    </div>
+
+    <!-- ---- SECTION: DATA LOG ---- -->
+    <div class="section-header">Data Log</div>
+
+    <div class="card log-card">
+      <div class="log-header-row">
+        <div class="card-title" style="margin-bottom:0;">ESP32 Data Log</div>
+        <button class="btn-clear-log" id="btn-clear-log" onclick="clearLog()" aria-label="Clear data log">
+          CLEAR LOG
+        </button>
+      </div>
+
+      <div class="log-body" id="log-body" aria-live="polite" aria-relevant="additions">
+        <div class="log-empty">No data received yet. Connect ESP32 or start Demo Mode.</div>
+      </div>
+    </div>
+
+    <!-- ---- SECTION: SYSTEM FLOW ---- -->
+    <div class="section-header">System Flow</div>
+
+    <div class="card">
+      <div class="card-title">Signal Path</div>
+
+      <div class="flow-row">
+        <div class="flow-step">
+          <div class="flow-box">ESP32</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-box">LDR Sensors</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-box">Optical Reading</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-box">Web Serial</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-box">JS Processing</div>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-box">NeoLuma Dashboard</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- DEMO MODE BUTTON (only shown when disconnected) ---- -->
+    <div style="margin-top:16px; text-align:center;" id="demo-toggle-wrap">
+      <button class="btn-primary btn-turn-on"
+              id="btn-demo"
+              onclick="toggleDemoMode()"
+              style="display:inline-block; width:auto; padding:10px 28px;">
+        START DEMO MODE
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+       ============================================================ -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer-inner">
+      <strong>Prototype Notice:</strong> NeoLuma is an academic hardware prototype for optical monitoring demonstration.
+      Sensor values are relative optical readings and are not calibrated clinical measurements.
+      This system is not intended for clinical diagnosis, bilirubin measurement, or neonatal treatment decisions.
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
