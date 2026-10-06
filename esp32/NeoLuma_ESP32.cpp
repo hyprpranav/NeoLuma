@@ -33,13 +33,14 @@
    ============================================================ */
 
 // BPW34 Photodiode inputs (Primary sensors)
-#define PD1_PIN     34    // BPW34 Photodiode 1
-#define PD2_PIN     35    // BPW34 Photodiode 2
+// Assigned to available ADC2 pins since Wi-Fi is not being used
+#define PD1_PIN     27    // BPW34 Photodiode 1
+#define PD2_PIN     14    // BPW34 Photodiode 2
 
 // LDR Sensor inputs (Secondary sensors - analog input)
 // ESP32 ADC1 channels are recommended
-#define LDR1_PIN    36    // LDR 1 — paired with Red LED 1 (moved from 34)
-#define LDR2_PIN    39    // LDR 2 — paired with Green LED (moved from 35)
+#define LDR1_PIN    34    // LDR 1 — paired with Red LED 1
+#define LDR2_PIN    35    // LDR 2 — paired with Green LED
 #define LDR3_PIN    32    // LDR 3 — paired with Red LED 2
 #define LDR4_PIN    33    // LDR 4 — paired with Blue LED
 
