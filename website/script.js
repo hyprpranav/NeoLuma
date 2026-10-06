@@ -632,6 +632,8 @@ function generateDemoData() {
   }
 
   return {
+    pd1:   simLDR(850, 50),
+    pd2:   simLDR(870, 45),
     ldr1:  simLDR(1200, 80),
     ldr2:  simLDR(1150, 75),
     ldr3:  simLDR(1230, 85),
